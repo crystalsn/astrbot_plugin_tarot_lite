@@ -1,3 +1,4 @@
+import os
 import random
 from itertools import chain
 
@@ -113,6 +114,11 @@ class TarotLite(Star):
     async def initialize(self):
         """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
 
+    def _card_image_path(self, name: str) -> str:
+        """Return the absolute path of a card image, cross-platform."""
+        plugin_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(plugin_dir, "resources", "tarot", f"{name}.jpg")
+
 
     @filter.command(GACHA_LUCK)
     async def gacha_luck(self, event: AstrMessageEvent):
@@ -140,7 +146,7 @@ class TarotLite(Star):
                 name="占卜师",
                 content=[Plain(f"第{i + 1}张「{name} - {'正位' if is_upright else '逆位'}」\n"
                             + f"单牌释意：{up if is_upright else down}\n"),
-                         Image.fromFileSystem(f"data\\plugins\\astrbot_plugin_tarot_lite\\resources\\tarot\\{name}.jpg")],
+                         Image.fromFileSystem(self._card_image_path(name))],
             )
             chain.nodes.append(node)
             #result_text += f"第{i + 1}张「{name}{'正位' if is_upright else '逆位'}」：{up if is_upright else down}\n"
@@ -207,7 +213,7 @@ class TarotLite(Star):
             content=[Plain(f"{user_name}，今日抽牌结果如下：\n"
                         + f"「{card_name} - {'正位' if is_upright else '逆位'}」\n"
                         + f"单牌释意：{meaning}\n"),
-                     Image.fromFileSystem(f"data\\plugins\\astrbot_plugin_tarot_lite\\resources\\tarot\\{card_name}.jpg")],
+                     Image.fromFileSystem(self._card_image_path(card_name))],
         )
         chain.nodes.append(card_node)
 
