@@ -139,7 +139,7 @@ class TarotLite(Star):
             for i, (name, is_upright, meaning) in enumerate(drawn)
         )
         prompt = (
-            f"用户「{user_name}」想测试当前的抽卡运势（游戏抽卡/扭蛋运气）。"
+            f"用户「{user_name}」想测试当前的抽卡运势（游戏抽卡）。"
             f"使用{spread}抽取了{card_num}张韦特塔罗牌：\n{cards_desc}\n\n"
             "请作为专业的塔罗牌占卜师，结合牌面（含正逆位牌意）解读用户当前的抽卡运势："
             "首先一句话给出结论，再进行运势评级（如 用★表示，满分五星）以及简洁的运势分析，"

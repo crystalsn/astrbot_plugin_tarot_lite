@@ -1,14 +1,15 @@
-# astrbot-plugin-helloworld
+# 轻量级塔罗牌抽卡
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+ 1.0 版本，使用经典韦特塔罗牌解析
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+> 自用塔罗牌抽卡插件，当前更新到1.0版本，没有图片，仅有抽卡运势
 
-# Supports
+# 指令
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+- 抽卡运势
+
+
+# 使用方法
+
+## 抽卡运势
+- 输入“抽卡运势”，即随机抽取1-3张牌，使用无牌阵三张牌解析当前抽卡运势
