@@ -131,7 +131,7 @@ class TarotLite(Star):
         card_names = random.sample(list(RIDER_WAITE_CARDS.keys()), card_num)
 
         drawn = []
-        result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……\n"
+        result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……"
         yield event.plain_result(result_text)
         result_text = f"{user_name}，本次抽牌结果如下：\n"
         #result_text = f"{user_name}，正在为你洗牌…本次采用「{spread}」，抽取 {card_num} 张塔罗牌\n"
