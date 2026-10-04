@@ -103,7 +103,7 @@ SPREAD_NO_POSITION = "无牌阵三张"  # three cards without positional meaning
 
 # 插件指令
 GACHA_LUCK = "抽卡运势"
-TODAY_FORTUNE = "今日运势"
+TODAY_FORTUNE = "运势牌"
 
 @register("tarot_lite", "YourName", "一个简单的塔罗牌插件", "1.0.0")
 class TarotLite(Star):
