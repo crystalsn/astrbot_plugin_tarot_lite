@@ -1,6 +1,7 @@
 import random
 from itertools import chain
 
+
 from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
@@ -102,6 +103,7 @@ SPREAD_NO_POSITION = "无牌阵三张"  # three cards without positional meaning
 
 # 插件指令
 GACHA_LUCK = "抽卡运势"
+TODAY_FORTUNE = "今日运势"
 
 @register("tarot_lite", "YourName", "一个简单的塔罗牌插件", "1.0.0")
 class TarotLite(Star):
@@ -123,15 +125,25 @@ class TarotLite(Star):
         card_names = random.sample(list(RIDER_WAITE_CARDS.keys()), card_num)
 
         drawn = []
-        result_text = f"{user_name}，正在洗牌……\n"
+        result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……\n"
         yield event.plain_result(result_text)
         result_text = f"{user_name}，本次抽牌结果如下：\n"
         #result_text = f"{user_name}，正在为你洗牌…本次采用「{spread}」，抽取 {card_num} 张塔罗牌\n"
+        chain = Nodes([])
+
         for i, name in enumerate(card_names):
             is_upright = random.random() < 0.5
             up, down = RIDER_WAITE_CARDS[name]
             drawn.append((name, is_upright, up if is_upright else down))
-            result_text += f"第{i + 1}张「{name}{'正位' if is_upright else '逆位'}」：{up if is_upright else down}\n"
+            node = Node(
+                uin=1037016070,
+                name="占卜师",
+                content=[Plain(f"第{i + 1}张「{name} - {'正位' if is_upright else '逆位'}」\n"
+                            + f"单牌释意：{up if is_upright else down}\n"),
+                         Image.fromFileSystem(f"data\\plugins\\astrbot_plugin_tarot_lite\\resources\\tarot\\{name}.jpg")],
+            )
+            chain.nodes.append(node)
+            #result_text += f"第{i + 1}张「{name}{'正位' if is_upright else '逆位'}」：{up if is_upright else down}\n"
 
         # Build the prompt and ask the LLM for a gacha luck interpretation
         cards_desc = "\n".join(
@@ -143,7 +155,7 @@ class TarotLite(Star):
             f"使用{spread}抽取了{card_num}张韦特塔罗牌：\n{cards_desc}\n\n"
             "请作为专业的塔罗牌占卜师，结合牌面（含正逆位牌意）解读用户当前的抽卡运势："
             "首先一句话给出结论，再进行运势评级（如 用★表示，满分五星）以及简洁的运势分析，"
-            "并可附上一条抽卡建议，如推荐抽取的时机、地点或幸运元素（若牌面有暗示）。回答约150-250字。不需要用md文档的表述"
+            "并可附上一条抽卡建议，如推荐抽取的时机、地点或幸运元素（若牌面有暗示）。回答约150-250字。不需要用md文档的表述，但要保证排版清晰易读。"
         )
         interpretation = ""
         try:
@@ -163,13 +175,7 @@ class TarotLite(Star):
             logger.error(f"生成抽卡运势 AI 解读失败: {e}")
             interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
 
-        chain = Nodes([])
-        node = Node(
-            uin=1037016070,
-            name="占卜师",
-            content=[Plain(result_text), ],
-        )
-        chain.nodes.append(node)
+
         ai_node = Node(
             uin=1037016070,
             name="占卜师",
@@ -180,6 +186,67 @@ class TarotLite(Star):
 
         yield event.chain_result([chain])
         #yield event.plain_result(f"属于你的抽卡运势分析如下：\n{interpretation}")
+
+    @filter.command(TODAY_FORTUNE)
+    async def today_fortune(self, event: AstrMessageEvent):
+        """单抽一张韦特塔罗牌，测试今日运势并由大模型解读"""
+        user_name = event.get_sender_name()
+
+        # Draw a single card with a random upright/reversed orientation
+        card_name = random.choice(list(RIDER_WAITE_CARDS.keys()))
+        is_upright = random.random() < 0.5
+        up, down = RIDER_WAITE_CARDS[card_name]
+        meaning = up if is_upright else down
+
+        yield event.plain_result(f"正在为「{user_name}」抽取今日运势牌，请稍作等待……\n")
+
+        chain = Nodes([])
+        card_node = Node(
+            uin=1037016070,
+            name="占卜师",
+            content=[Plain(f"{user_name}，今日抽牌结果如下：\n"
+                        + f"「{card_name} - {'正位' if is_upright else '逆位'}」\n"
+                        + f"单牌释意：{meaning}\n"),
+                     Image.fromFileSystem(f"data\\plugins\\astrbot_plugin_tarot_lite\\resources\\tarot\\{card_name}.jpg")],
+        )
+        chain.nodes.append(card_node)
+
+        # Build the prompt and ask the LLM for a today's fortune interpretation
+        prompt = (
+            f"用户「{user_name}」想测试今日的整体运势。"
+            f"使用单张牌抽取了1张韦特塔罗牌：\n"
+            f"「{card_name}{'正位' if is_upright else '逆位'}」，牌意：{meaning}\n\n"
+            "请作为专业的塔罗牌占卜师，结合牌面（含正逆位牌意）解读用户今日的运势："
+            "首先一句话给出结论，再进行运势评级（如 用★表示，满分五星）以及简洁的运势分析，"
+            "涵盖综合、事业/学业、感情、财运等方面（可有所侧重），"
+            "并可附上一条今日开运建议，如幸运色、幸运数字或宜做之事（若牌面有暗示）。回答约150-250字。不需要用md文档的表述，但要保证排版清晰易读。"
+        )
+        interpretation = ""
+        try:
+            provider = self.context.get_using_provider()
+            if provider is None:
+                interpretation = "未配置大语言模型，无法进行 AI 解读，请先在管理面板中启用 LLM 提供商。"
+            else:
+                llm_response = await provider.text_chat(
+                    prompt=prompt,
+                    session_id=None,
+                    contexts=[],
+                    image_urls=[],
+                    system_prompt="你是一位专业的塔罗牌占卜师，擅长根据牌面解读每日运势，回答简洁。",
+                )
+                interpretation = llm_response.completion_text.strip()
+        except Exception as e:
+            logger.error(f"生成今日运势 AI 解读失败: {e}")
+            interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
+
+        ai_node = Node(
+            uin=1037016070,
+            name="占卜师",
+            content=[Plain(f"{interpretation}"), ],
+        )
+        chain.nodes.append(ai_node)
+
+        yield event.chain_result([chain])
 
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
