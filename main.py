@@ -104,7 +104,7 @@ SPREAD_NO_POSITION = "无牌阵三张"  # three cards without positional meaning
 
 # 插件指令
 GACHA_LUCK = "抽卡运势"
-TODAY_FORTUNE = "运势牌"
+TODAY_FORTUNE = "抽运势牌"
 
 @register("tarot_lite", "YourName", "一个简单的塔罗牌插件", "1.0.0")
 class TarotLite(Star):
@@ -125,14 +125,14 @@ class TarotLite(Star):
         """抽一张或三张韦特塔罗牌（三张为无牌阵），测试当前抽卡运势并由大模型解读"""
         user_name = event.get_sender_name()
 
+        result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……"
+        yield event.plain_result(result_text)
         # Randomly draw 1 or 3 cards, each with a random upright/reversed orientation
         card_num = random.choice([1, 3])
         spread = SPREAD_ONE if card_num == 1 else SPREAD_NO_POSITION
         card_names = random.sample(list(RIDER_WAITE_CARDS.keys()), card_num)
 
         drawn = []
-        result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……"
-        yield event.plain_result(result_text)
         result_text = f"{user_name}，本次抽牌结果如下：\n"
         #result_text = f"{user_name}，正在为你洗牌…本次采用「{spread}」，抽取 {card_num} 张塔罗牌\n"
         chain = Nodes([])
@@ -198,13 +198,13 @@ class TarotLite(Star):
         """单抽一张韦特塔罗牌，测试今日运势并由大模型解读"""
         user_name = event.get_sender_name()
 
+        yield event.plain_result(f"正在为「{user_name}」抽取今日运势牌，请稍作等待……")
         # Draw a single card with a random upright/reversed orientation
         card_name = random.choice(list(RIDER_WAITE_CARDS.keys()))
         is_upright = random.random() < 0.5
         up, down = RIDER_WAITE_CARDS[card_name]
         meaning = up if is_upright else down
 
-        yield event.plain_result(f"正在为「{user_name}」抽取今日运势牌，请稍作等待……\n")
 
         chain = Nodes([])
         card_node = Node(
