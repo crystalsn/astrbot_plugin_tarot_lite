@@ -105,6 +105,7 @@ SPREAD_NO_POSITION = "无牌阵三张"  # three cards without positional meaning
 # 插件指令
 GACHA_LUCK = "抽卡运势"
 TODAY_FORTUNE = "抽运势牌"
+DIVINE = "占卜"
 
 @register("tarot_lite", "YourName", "一个简单的塔罗牌插件", "1.0.0")
 class TarotLite(Star):
@@ -254,5 +255,74 @@ class TarotLite(Star):
 
         yield event.chain_result([chain])
 
+    @filter.command(DIVINE)
+    async def divine(self, event: AstrMessageEvent, text: str = ""):
+        """用无牌阵三张来解答问卜者的问题"""
+        user_name = event.get_sender_name()
+
+        if not text.strip():
+            yield event.plain_result("请在「占卜」后附上你的问题，例如：占卜 我最近的感情运势如何？")
+            return
+
+        question = text.strip()
+        yield event.plain_result(f"正在为「{user_name}」抽取占卜牌，请稍作等待……")
+        # Draw three cards with the no-position spread, each with a random upright/reversed orientation
+        card_names = random.sample(list(RIDER_WAITE_CARDS.keys()), 3)
+
+        drawn = []
+        chain = Nodes([])
+        for i, name in enumerate(card_names):
+            is_upright = random.random() < 0.5
+            up, down = RIDER_WAITE_CARDS[name]
+            drawn.append((name, is_upright, up if is_upright else down))
+            node = Node(
+                uin=1037016070,
+                name="占卜师",
+                content=[Plain(f"第{i + 1}张「{name} - {'正位' if is_upright else '逆位'}」\n"
+                            + f"单牌释意：{up if is_upright else down}\n"),
+                         Image.fromFileSystem(self._card_image_path(name))],
+            )
+            chain.nodes.append(node)
+
+        # Build the prompt and ask the LLM for a question-focused interpretation
+        cards_desc = "\n".join(
+            f"第{i + 1}张「{name}{'正位' if is_upright else '逆位'}」，牌意：{meaning}"
+            for i, (name, is_upright, meaning) in enumerate(drawn)
+        )
+        prompt = (
+            f"用户「{user_name}」的问题是：「{question}」。"
+            f"使用无牌阵三张抽取了3张韦特塔罗牌：\n{cards_desc}\n\n"
+            "请作为专业的塔罗牌占卜师，请先阅读问卜者的问题，再围绕用户的问题，结合牌面（含正逆位牌意）进行解读："
+            "首先一句话给出针对该问题的总体结论，再逐张说明牌面与问题的关联，"
+            "最后综合三张牌给出明确的回答与一条行动建议。回答约150-300字。"
+            "不需要用md文档的表述，但要保证排版清晰易读。"
+        )
+        interpretation = ""
+        try:
+            provider = self.context.get_using_provider()
+            if provider is None:
+                interpretation = "未配置大语言模型，无法进行 AI 解读，请先在管理面板中启用 LLM 提供商。"
+            else:
+                llm_response = await provider.text_chat(
+                    prompt=prompt,
+                    session_id=None,
+                    contexts=[],
+                    image_urls=[],
+                    system_prompt="你是一位专业的塔罗牌占卜师，擅长根据牌面解答问卜者的具体问题，回答简洁。",
+                )
+                interpretation = llm_response.completion_text.strip()
+        except Exception as e:
+            logger.error(f"生成占卜 AI 解读失败: {e}")
+            interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
+
+        ai_node = Node(
+            uin=1037016070,
+            name="占卜师",
+            content=[Plain(f"关于「{question}"[:50] + "」的解读如下：\n"
+                        + f"{interpretation}"), ],
+        )
+        chain.nodes.append(ai_node)
+
+        yield event.chain_result([chain])
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
