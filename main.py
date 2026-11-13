@@ -135,7 +135,6 @@ class TarotLite(Star):
 
         drawn = []
         result_text = f"{user_name}，本次抽牌结果如下：\n"
-        #result_text = f"{user_name}，正在为你洗牌…本次采用「{spread}」，抽取 {card_num} 张塔罗牌\n"
         chain = Nodes([])
 
         for i, name in enumerate(card_names):
@@ -150,7 +149,13 @@ class TarotLite(Star):
                          Image.fromFileSystem(self._card_image_path(name))],
             )
             chain.nodes.append(node)
-            #result_text += f"第{i + 1}张「{name}{'正位' if is_upright else '逆位'}」：{up if is_upright else down}\n"
+
+        # 先发送抽卡结果（不包含AI解读）
+        try:
+            yield event.chain_result([chain])
+        except Exception as e:
+            logger.error(f"发送抽卡结果失败: {e}")
+            yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
 
         # Build the prompt and ask the LLM for a gacha luck interpretation
         cards_desc = "\n".join(
@@ -182,17 +187,24 @@ class TarotLite(Star):
             logger.error(f"生成抽卡运势 AI 解读失败: {e}")
             interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
 
-
+        # 创建包含AI解读的完整结果
+        complete_chain = Nodes([])
+        for node in chain.nodes:
+            complete_chain.nodes.append(node)
+        
         ai_node = Node(
             uin=1037016070,
             name="占卜师",
-            content=[Plain(f"{interpretation}"), ],
+            content=[Plain(f"\n\n{interpretation}"), ],
         )
-        chain.nodes.append(ai_node)
+        complete_chain.nodes.append(ai_node)
 
-
-        yield event.chain_result([chain])
-        #yield event.plain_result(f"属于你的抽卡运势分析如下：\n{interpretation}")
+        # 发送包含AI解读的完整结果
+        try:
+            yield event.chain_result([complete_chain])
+        except Exception as e:
+            logger.error(f"发送完整结果失败: {e}")
+            yield event.plain_result("抱歉，完整结果发送失败，请稍后再试。")
 
     @filter.command(TODAY_FORTUNE)
     async def today_fortune(self, event: AstrMessageEvent):
@@ -217,6 +229,13 @@ class TarotLite(Star):
                      Image.fromFileSystem(self._card_image_path(card_name))],
         )
         chain.nodes.append(card_node)
+
+        # 先发送抽卡结果（不包含AI解读）
+        try:
+            yield event.chain_result([chain])
+        except Exception as e:
+            logger.error(f"发送抽卡结果失败: {e}")
+            yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
 
         # Build the prompt and ask the LLM for a today's fortune interpretation
         prompt = (
@@ -246,14 +265,24 @@ class TarotLite(Star):
             logger.error(f"生成今日运势 AI 解读失败: {e}")
             interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
 
+        # 创建包含AI解读的完整结果
+        complete_chain = Nodes([])
+        for node in chain.nodes:
+            complete_chain.nodes.append(node)
+        
         ai_node = Node(
             uin=1037016070,
             name="占卜师",
-            content=[Plain(f"{interpretation}"), ],
+            content=[Plain(f"\n\n{interpretation}"), ],
         )
-        chain.nodes.append(ai_node)
+        complete_chain.nodes.append(ai_node)
 
-        yield event.chain_result([chain])
+        # 发送包含AI解读的完整结果
+        try:
+            yield event.chain_result([complete_chain])
+        except Exception as e:
+            logger.error(f"发送完整结果失败: {e}")
+            yield event.plain_result("抱歉，完整结果发送失败，请稍后再试。")
 
     @filter.command(DIVINE)
     async def divine(self, event: AstrMessageEvent, text: str = ""):
@@ -283,6 +312,13 @@ class TarotLite(Star):
                          Image.fromFileSystem(self._card_image_path(name))],
             )
             chain.nodes.append(node)
+
+        # 先发送抽卡结果（不包含AI解读）
+        try:
+            yield event.chain_result([chain])
+        except Exception as e:
+            logger.error(f"发送抽卡结果失败: {e}")
+            yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
 
         # Build the prompt and ask the LLM for a question-focused interpretation
         cards_desc = "\n".join(
@@ -315,14 +351,23 @@ class TarotLite(Star):
             logger.error(f"生成占卜 AI 解读失败: {e}")
             interpretation = "抱歉，AI 解读生成失败，请稍后再试。"
 
+        # 创建包含AI解读的完整结果
+        complete_chain = Nodes([])
+        for node in chain.nodes:
+            complete_chain.nodes.append(node)
+        
         ai_node = Node(
             uin=1037016070,
             name="占卜师",
-            content=[Plain(f"关于「{question}"[:50] + "」的解读如下：\n"
-                        + f"{interpretation}"), ],
+            content=[Plain(f"\n\n关于「{question}」的解读如下：\n{interpretation}"), ],
         )
-        chain.nodes.append(ai_node)
+        complete_chain.nodes.append(ai_node)
 
-        yield event.chain_result([chain])
+        # 发送包含AI解读的完整结果
+        try:
+            yield event.chain_result([complete_chain])
+        except Exception as e:
+            logger.error(f"发送完整结果失败: {e}")
+            yield event.plain_result("抱歉，完整结果发送失败，请稍后再试。")
     async def terminate(self):
         """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
