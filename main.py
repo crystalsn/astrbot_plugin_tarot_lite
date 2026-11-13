@@ -150,9 +150,16 @@ class TarotLite(Star):
             )
             chain.nodes.append(node)
 
-        # 先发送抽卡结果（不包含AI解读）
+        # 先发送抽卡结果（不包含AI解读）- 以独立消息展示
         try:
-            yield event.chain_result([chain])
+            # 创建独立消息内容
+            result_text = f"「{user_name}」抽取抽卡运势牌结果如下：\n"
+            for i, (name, is_upright, meaning) in enumerate(drawn):
+                result_text += f"第{i + 1}张「{name} - {'正位' if is_upright else '逆位'}」\n"
+                result_text += f"单牌释意：{meaning}\n"
+            result_text += "抽卡解析正在生成中，请稍侯……"
+            
+            yield event.plain_result(result_text)
         except Exception as e:
             logger.error(f"发送抽卡结果失败: {e}")
             yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
@@ -230,9 +237,15 @@ class TarotLite(Star):
         )
         chain.nodes.append(card_node)
 
-        # 先发送抽卡结果（不包含AI解读）
+        # 先发送抽卡结果（不包含AI解读）- 以独立消息展示
         try:
-            yield event.chain_result([chain])
+            # 创建独立消息内容
+            result_text = f"「{user_name}」抽取今日运势牌结果如下：\n"
+            result_text += f"「{card_name} - {'正位' if is_upright else '逆位'}」\n"
+            result_text += f"单牌释意：{meaning}\n"
+            result_text += "抽卡解析正在生成中，请稍侯……"
+            
+            yield event.plain_result(result_text)
         except Exception as e:
             logger.error(f"发送抽卡结果失败: {e}")
             yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
@@ -313,9 +326,16 @@ class TarotLite(Star):
             )
             chain.nodes.append(node)
 
-        # 先发送抽卡结果（不包含AI解读）
+        # 先发送抽卡结果（不包含AI解读）- 以独立消息展示
         try:
-            yield event.chain_result([chain])
+            # 创建独立消息内容
+            result_text = f"「{user_name}」抽取占卜牌结果如下： \n"
+            for i, (name, is_upright, meaning) in enumerate(drawn):
+                result_text += f"第{i + 1}张「{name} - {'正位' if is_upright else '逆位'}」\n"
+                result_text += f"单牌释意：{meaning}\n"
+            result_text += "抽卡解析正在生成中，请稍侯……"
+            
+            yield event.plain_result(result_text)
         except Exception as e:
             logger.error(f"发送抽卡结果失败: {e}")
             yield event.plain_result("抱歉，抽卡结果发送失败，请稍后再试。")
