@@ -123,14 +123,14 @@ class TarotLite(Star):
 
     @filter.command(GACHA_LUCK)
     async def gacha_luck(self, event: AstrMessageEvent):
-        """抽一张或三张韦特塔罗牌（三张为无牌阵），测试当前抽卡运势并由大模型解读"""
+        """抽三张无牌阵韦特塔罗牌，测试当前抽卡运势并由大模型解读"""
         user_name = event.get_sender_name()
 
         result_text = f"正在为「{user_name}」抽取抽卡运势牌，请稍作等待……"
         yield event.plain_result(result_text)
-        # Randomly draw 1 or 3 cards, each with a random upright/reversed orientation
-        card_num = random.choice([1, 3])
-        spread = SPREAD_ONE if card_num == 1 else SPREAD_NO_POSITION
+        # 固定抽3张牌（无牌阵）
+        card_num = 3
+        spread = SPREAD_NO_POSITION
         card_names = random.sample(list(RIDER_WAITE_CARDS.keys()), card_num)
 
         drawn = []
